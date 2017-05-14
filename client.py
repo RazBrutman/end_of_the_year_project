@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import socket
 import select
+import sys
 import os
 import numpy as np
 import scipy.misc as smp
@@ -28,14 +29,19 @@ def main():
         if msvcrt.kbhit():
             char = msvcrt.getch()
             if char == '\r':
+                print
                 messages.append(request)
                 request = ""
             elif char == '\x1b':
                 sock.close()
                 break
             else:
-                request += char
-                print request
+                if char == "\x08":
+                    request = request[:-1]
+                    print request, ' \b\r',
+                else:
+                    request += char
+                    print request + '\r',
         if rlist:
             data = sock.recv(1024)
             if data == "":
@@ -61,8 +67,10 @@ def main():
 def reassemble_file(pfp, file_num):
     f = open("file_{}.jpg".format(file_num), "ab")
     file_num += 1
-    for i in xrange(1, len(pfp)):
-        f.write(pfp[i])
+    pfp.remove("!!START!!")
+    pfp.remove("!!END!!")
+    for item in pfp:
+        f.write(item)
     f.close()
     return [], file_num
 
