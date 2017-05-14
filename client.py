@@ -1,23 +1,14 @@
 # -*- coding: utf-8 -*-
 import socket
 import select
-import sys
-import os
-import numpy as np
-import scipy.misc as smp
-from PIL import Image
-import errno
-import time
 import msvcrt
-import threading
-import re
 
 
 def main():
 
     file_num = 1
     reading_flag = False
-    proccess_file_packects = []
+    process_file_packets = []
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(('127.0.0.1', 54321))
@@ -48,13 +39,17 @@ def main():
                 break
             else: #there is data to be read
                 if reading_flag:
-                    proccess_file_packects.append(data)
                     if "!!END!!" in data:
                         reading_flag = False
-                        proccess_file_packects, file_num = reassemble_file(proccess_file_packects, file_num)
+                        if data != "!!END!!":
+                            process_file_packets.append(data[data.find("!!END!!") + 7:])
+                        process_file_packets, file_num = reassemble_file(process_file_packets, file_num)
+                    else:
+                        process_file_packets.append(data)
                 elif "!!START!!" in data:
                     reading_flag = True
-                    proccess_file_packects.append(data)
+                    if data != "!!START!!":
+                        process_file_packets.append(data[data.find("!!START!!") + 9:])
                 else:
                     print data
         for message in messages:
@@ -67,8 +62,6 @@ def main():
 def reassemble_file(pfp, file_num):
     f = open("file_{}.jpg".format(file_num), "ab")
     file_num += 1
-    pfp.remove("!!START!!")
-    pfp.remove("!!END!!")
     for item in pfp:
         f.write(item)
     f.close()
