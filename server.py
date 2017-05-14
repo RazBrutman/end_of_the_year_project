@@ -46,13 +46,14 @@ def main():
 
 
 def send_file(client):
+    messages.append((client, "!!START!!"))
     print "started reading..."
     f = open("test.jpg", 'rb')
     b = f.read()
-    messages.append((client, "!!START!!"))
-    while b:
-        messages.append((client, b))
-        b = f.read(1024)
+    messages.append((client, b))
+    #while b:
+    #    messages.append((client, b))
+    #    b = f.read(1024)
     print "finished reading"
     f.close()
     messages.append((client, "!!END!!"))
