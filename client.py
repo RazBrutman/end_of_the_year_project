@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import socket
 import select
+import sys
 import os
 import numpy as np
 import scipy.misc as smp
@@ -11,12 +12,14 @@ import msvcrt
 import threading
 import re
 
-file_num = 1
-reading_flag = False
-
 
 def main():
-    sock = socket.socket()
+
+    file_num = 1
+    reading_flag = False
+    proccess_file_packects = []
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(('127.0.0.1', 54321))
     print "connected"
     request = ""
@@ -26,28 +29,50 @@ def main():
         if msvcrt.kbhit():
             char = msvcrt.getch()
             if char == '\r':
+                print
                 messages.append(request)
                 request = ""
             elif char == '\x1b':
-                sock.send("")
                 sock.close()
                 break
             else:
-                request += char
-                print request
+                if char == "\x08":
+                    request = request[:-1]
+                    print request, ' \b\r',
+                else:
+                    request += char
+                    print request + '\r',
         if rlist:
             data = sock.recv(1024)
             if data == "":
-                sock.close()
                 break
-            else:
-                print data
-
+            else: #there is data to be read
+                if reading_flag:
+                    proccess_file_packects.append(data)
+                    if "!!END!!" in data:
+                        reading_flag = False
+                        proccess_file_packects, file_num = reassemble_file(proccess_file_packects, file_num)
+                elif "!!START!!" in data:
+                    reading_flag = True
+                    proccess_file_packects.append(data)
+                else:
+                    print data
         for message in messages:
             sock.send(message)
             messages.remove(message)
     print "connection closed"
     raw_input("press any key to continue...")
+
+
+def reassemble_file(pfp, file_num):
+    f = open("file_{}.jpg".format(file_num), "ab")
+    file_num += 1
+    pfp.remove("!!START!!")
+    pfp.remove("!!END!!")
+    for item in pfp:
+        f.write(item)
+    f.close()
+    return [], file_num
 
 
 if __name__ == "__main__":

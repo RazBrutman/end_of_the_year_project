@@ -7,7 +7,7 @@ import concurrent.futures
 open_client_sockets = []
 requested_clients = []
 messages = []
-f = open("D:\\PycharmProjects\\end_of_the_year_project\\test.jpg", 'rb')
+
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         if msvcrt.kbhit():
             if msvcrt.getch() == "\x1b":
                 for client in open_client_sockets:
-                    client.send("")
+                    client.close()
                 print "ended sockets"
                 break
         rlist, wlist, xlist = select.select([server_sock] + open_client_sockets, open_client_sockets, [])
@@ -46,16 +46,17 @@ def main():
 
 
 def send_file(client):
-    copy = f
-    byte_read = copy.read(1024)
-    packet_num = 0
-    messages.append((client, "(START)({})".format(packet_num)))
-    packet_num += 1
-    while byte_read:
-        messages.append((client, "(" + byte_read + ")" + "({})".format(packet_num)))
-        byte_read = copy.read()
-        packet_num += 1
-    messages.append((client, "(END)({})".format(packet_num)))
+    messages.append((client, "!!START!!"))
+    print "started reading..."
+    f = open("test.jpg", 'rb')
+    b = f.read()
+    messages.append((client, b))
+    #while b:
+    #    messages.append((client, b))
+    #    b = f.read(1024)
+    print "finished reading"
+    f.close()
+    messages.append((client, "!!END!!"))
     return
 
 
