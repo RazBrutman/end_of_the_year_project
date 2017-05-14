@@ -2,6 +2,7 @@
 import socket
 import select
 import msvcrt
+import os
 
 
 def main():
@@ -60,8 +61,11 @@ def main():
 
 
 def reassemble_file(pfp, file_num):
-    f = open("file_{}.jpg".format(file_num), "ab")
-    file_num += 1
+    file_name = "file_{}.jpg".format(file_num)
+    while file_name in os.listdir(os.getcwd()):
+        file_num += 1
+        file_name = "file_{}.jpg".format(file_num)
+    f = open(file_name, "ab")
     for item in pfp:
         f.write(item)
     f.close()
