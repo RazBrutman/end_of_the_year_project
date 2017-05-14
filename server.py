@@ -1,16 +1,21 @@
 import socket
 import select
 import msvcrt
+import sys
 import concurrent.futures
 
 
 open_client_sockets = []
 requested_clients = []
 messages = []
+try:
+    requested_file = sys.argv[1]
+except IndexError:
+    requested_file = "test.jpg"
 
 
 def main():
-    server_sock = socket.socket()
+    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_sock.bind(('0.0.0.0', 54321))
     server_sock.listen(5)
     print "started"
@@ -47,7 +52,7 @@ def main():
 def send_file(client):
     messages.append((client, "!!START!!"))
     print "started reading..."
-    f = open("test.jpg", 'rb')
+    f = open(requested_file, 'rb')
     b = f.read()
     messages.append((client, b))
     print "finished reading"
