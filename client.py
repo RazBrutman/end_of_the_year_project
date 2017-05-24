@@ -3,6 +3,35 @@ import socket
 import select
 import msvcrt
 import os
+#import gui
+
+
+class Client(object):
+
+    def __init__(self, SERVER_IP, PORT):
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.connect((SERVER_IP, PORT))
+            print "connected"
+            self.sock_object = sock
+        except socket.error:
+            print "Server not found!"
+
+    def send_msg(self, msg, **kwargs):
+
+        if 'type' in kwargs:
+            print kwargs['type']
+
+        if self.sock_object:
+            self.sock_object.send(msg)
+
+    def recv_msg(self):
+
+        if self.sock_object:
+            return self.sock_object.recv(1024)
+
+
 
 
 def main():
@@ -11,12 +40,21 @@ def main():
     reading_flag = False
     process_file_packets = []
 
+    SERVER_IP = '127.0.0.1'
+    connected = False
+
+    #Connecting to server
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(('127.0.0.1', 54321))
-    print "connected"
+    try:
+        sock.connect((SERVER_IP, 54321))
+        connected = True
+        print "connected"
+    except socket.error:
+        print "Server not found!"
+
     request = ""
     messages = []
-    while True:
+    while connected:
         rlist, wlist, xlist = select.select([sock], [sock], [])
         if msvcrt.kbhit():
             char = msvcrt.getch()
@@ -57,7 +95,9 @@ def main():
             sock.send(message)
             messages.remove(message)
     print "connection closed"
-    raw_input("press any key to continue...")
+    #raw_input("press any key to continue...")
+
+
 
 
 def reassemble_file(pfp, file_num):
@@ -72,5 +112,3 @@ def reassemble_file(pfp, file_num):
     return [], file_num
 
 
-if __name__ == "__main__":
-    main()
